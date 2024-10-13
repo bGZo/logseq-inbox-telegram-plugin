@@ -15,6 +15,7 @@ interface IUpdate {
   message?: {
     date: number;
     text: string;
+    caption: string;
     from: {
       username: string;
     };
@@ -440,7 +441,6 @@ function getMessages(): Promise<IMessagesList[] | undefined> {
             updateId = element.update_id;
             if (
               element.message &&
-              element.message.text &&
               element.message.date
             ) {
               const withoutAuthorizedUsers: boolean =
@@ -464,6 +464,11 @@ function getMessages(): Promise<IMessagesList[] | undefined> {
                 }
               }
 
+              const textOrCaption = element.message.text || element.message.caption;
+              if (!textOrCaption) {
+                continue;
+              }
+
               const text = ((telegramText: string, addTimestamp: boolean) => {
                 if (addTimestamp) {
                   return `${dayjs
@@ -472,7 +477,7 @@ function getMessages(): Promise<IMessagesList[] | undefined> {
                 } else {
                   return telegramText;
                 }
-              })(element.message.text, logseq.settings!.addTimestamp);
+              })(textOrCaption, logseq.settings!.addTimestamp);
 
               log({
                 name: "Push in group messages",
