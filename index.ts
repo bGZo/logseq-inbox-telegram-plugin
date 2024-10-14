@@ -477,7 +477,7 @@ function getMessages(): Promise<IMessagesList[] | undefined> {
                 } else {
                   return telegramText;
                 }
-              })(textOrCaption, logseq.settings!.addTimestamp);
+              })(textOrCaption.replace(/\n- /g, '\n* '), logseq.settings!.addTimestamp);
 
               log({
                 name: "Push in group messages",
