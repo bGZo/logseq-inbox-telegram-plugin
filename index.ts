@@ -140,6 +140,13 @@ function applySettingsSchema() {
       title: "Polling interval (milliseconds)",
     },
     {
+      key: "targetPage",
+      description: "Be sure page is existed! If set null, all message would be pasted on journals by default.",
+      type: "string",
+      default: "",
+      title: "Target Page",
+    },
+    {
       key: "inboxName",
       description:
         "Messages will be pasted in daily journal into block with text, specified in inboxName property. Replace it in case of necessary. If you don't want to group messages, set inboxName property to null. In this case messages will be inserted directly into page block",
@@ -252,18 +259,23 @@ async function process() {
     return;
   }
 
-  const todayJournalPage = await getTodayJournal();
-  if (
-    !todayJournalPage ||
-    todayJournalPage.length <= 0 ||
-    !todayJournalPage[0].name
-  ) {
-    logseq.UI.showMsg(
-      "[Inbox Telegram] Cannot get today's journal page",
-      "error"
-    );
-    isProcessing = false;
-    return;
+
+  let targetPage = logseq.settings!.targetPage;
+  if (!targetPage) {
+    const todayJournalPage = await getTodayJournal();
+    if (
+      !todayJournalPage ||
+      todayJournalPage.length <= 0 ||
+      !todayJournalPage[0].name
+    ) {
+      logseq.UI.showMsg(
+        "[Inbox Telegram] Cannot get today's journal page",
+        "error"
+      );
+      isProcessing = false;
+      return;
+    }
+    targetPage = todayJournalPage[0].name
   }
 
   const defaultInboxName = logseq.settings!.inboxName || null;
@@ -293,7 +305,7 @@ async function process() {
   );
 
   Object.entries(grouped).forEach(async ([inboxName, messages]) => {
-    await insertMessages(todayJournalPage[0].name, inboxName, messages);
+    await insertMessages(targetPage, inboxName, messages);
   });
 
   logseq.UI.showMsg("[Inbox Telegram] Messages added to inbox", "success");
